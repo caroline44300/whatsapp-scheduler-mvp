@@ -121,3 +121,19 @@
   margin-top: 8px;
   font-weight: 500;
 }
+
+/* make the select show ellipsis if the text is too long */
+#wa-number-select {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* hide the little dropdown arrow when disabled */
+#wa-number-select:disabled {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: default;
+}

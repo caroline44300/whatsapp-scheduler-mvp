@@ -145,7 +145,8 @@ function showSchedulerModal(name, message) {
     enableTime: true,
     noCalendar: true,
     dateFormat: "H:i",
-    time_24hr: true
+    time_24hr: true,
+    defaultDate:   new Date(Date.now() + 60*60*1000),  // now +1h
   });
 
   document.getElementById("wa-cancel").onclick = () => modal.remove();
@@ -155,26 +156,41 @@ function showSchedulerModal(name, message) {
     .then(r => r.json())
     .then(({ numbers }) => {
       const select = document.getElementById("wa-number-select");
-      select.innerHTML = "";          // clear any old options
-      if (numbers.length) {
-        // add one <option> per number
+      select.innerHTML = ""; // clear previous
+
+      if (numbers.length > 1) {
+        // multiple: populate dropdown as before
         numbers.forEach(n => {
           const opt = document.createElement("option");
           opt.value = n;
           opt.textContent = n;
           select.appendChild(opt);
         });
+        // leave it enabled so user can pick
+        select.disabled = false;
+
+      } else if (numbers.length === 1) {
+        // exactly one: auto-select & disable dropdown
+        const only = numbers[0];
+        select.innerHTML = `<option value="${only}">${only}</option>`;
+        select.value = only;
+        select.disabled = true;
       } else {
-        // fallback to the “name” itself if no numbers
+        // no numbers: fall back to name
         const opt = document.createElement("option");
         opt.value = name;
         opt.textContent = name;
         select.appendChild(opt);
+        select.disabled = true;
       }
     })
     .catch(e => {
       console.error("Could not fetch contacts:", e);
-    }); 
+      // fallback: disable and show name
+      const select = document.getElementById("wa-number-select");
+      select.innerHTML = `<option>${name}</option>`;
+      select.disabled = true;
+    });
 
   document.getElementById("wa-confirm").onclick = () => {
     const date = document.getElementById("wa-date").value;
