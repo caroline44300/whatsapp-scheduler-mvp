@@ -1,11 +1,14 @@
 function waitForSendButton() {
-  const interval = setInterval(() => {
+  let lastObservedInput = null;
+
+  setInterval(() => {
     const sendButton = document.querySelector('span[data-icon="send"]')?.closest('button');
     const messageInput = document.querySelector('[contenteditable="true"][data-tab="10"]');
 
-    if (sendButton && messageInput) {
+    // Avoid reattaching if already observing this input
+    if (sendButton && messageInput && messageInput !== lastObservedInput) {
+      lastObservedInput = messageInput;
       setupMessageObserver(messageInput, sendButton);
-      clearInterval(interval);
     }
   }, 1000);
 }
