@@ -3,8 +3,8 @@
   "name": "WhatsApp Scheduler",
   "version": "1.0",
   "description": "Schedule messages in WhatsApp Web",
-  "permissions": ["scripting", "activeTab"],
-  "host_permissions": ["https://web.whatsapp.com/*"],
+  "permissions": ["scripting", "activeTab", "storage"],
+  "host_permissions": ["https://web.whatsapp.com/*", "http://localhost:8080/*"],
   "content_scripts": [
     {
       "matches": ["https://web.whatsapp.com/*"],

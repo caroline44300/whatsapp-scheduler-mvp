@@ -79,12 +79,12 @@ function injectDropdown(sendButton, attempt = 0) {
   };
 
   document.querySelectorAll(".wa-scheduler-option").forEach(option => {
+    // inside injectDropdown() where you handle the “Tomorrow” button:
     option.onclick = () => {
       const messageBox = document.querySelector('[contenteditable="true"][data-tab="10"]');
-      const message = messageBox?.innerText.trim();
-      const name = document.querySelector("header span[dir='auto']")?.innerText?.trim() || "Unknown";
-      const type = option.getAttribute("data-time");
-
+      const message = messageBox.innerText.trim();
+      const name    = document.querySelector("header span[dir='auto']").innerText.trim();
+      const type    = option.getAttribute("data-time");
       if (!message) return;
 
       if (type === "now") {
@@ -94,8 +94,24 @@ function injectDropdown(sendButton, attempt = 0) {
         const t = new Date();
         t.setDate(t.getDate() + 1);
         t.setHours(9, 0, 0, 0);
-        console.log({ name, message, send_time: t.toISOString() });
-        alert(`Scheduled to ${name} for: ${t.toLocaleString()}`);
+
+        // ** NEW: POST to scheduler **
+        fetch("http://localhost:8080/api/schedule", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name:      name,
+            message:   message,
+            send_time: t.toISOString()
+          })
+        })
+        .then(r => r.json())
+        .then(({ success }) => {
+          if (success) alert(`✅ Scheduled for ${t.toLocaleString()}`);
+          else         alert(`❌ Scheduling failed`);
+        })
+        .catch(e => alert("Error: "+e));
+
         messageBox.innerText = "";
       } else {
         showSchedulerModal(name, message);
@@ -133,32 +149,33 @@ function showSchedulerModal(name, message) {
   document.getElementById("wa-confirm").onclick = () => {
     const date = document.getElementById("wa-date").value;
     const time = document.getElementById("wa-time").value;
-
-    if (date && time) {
-      const iso = new Date(`${date}T${time}`).toISOString();
-      const localTime = new Date(iso).toLocaleString(undefined, {
-        weekday: 'short',
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-      });
-      const payload = {
-        name,
-        message,
-        send_time: iso
-      };
-      console.log("Scheduled Message:", payload);
-      alert(`Message to ${name} scheduled for: ${localTime}`);
-      modal.remove();
-
-      const messageBox = document.querySelector('[contenteditable="true"][data-tab="10"]');
-      if (messageBox) messageBox.innerText = "";
-    } else {
+    if (!date || !time) {
       alert("Please select both a date and a time.");
+      return;
     }
+
+    const iso = new Date(`${date}T${time}`).toISOString();
+    const payload = { name, message, send_time: iso };
+
+    // ** NEW: POST to scheduler **
+    fetch("http://localhost:8080/api/schedule", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(({ success }) => {
+      if (success) {
+        const local = new Date(iso).toLocaleString();
+        alert(`✅ Scheduled for ${local}`);
+      } else {
+        alert("❌ Scheduling failed");
+      }
+    })
+    .catch(e => alert("Error: "+e));
+
+    modal.remove();
+    document.querySelector('[contenteditable="true"][data-tab="10"]').innerText = "";
   };
 }
 
