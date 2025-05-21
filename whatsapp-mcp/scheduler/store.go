@@ -1,11 +1,8 @@
 package scheduler
 
 import (
-	"fmt"
 	"time"
 	"database/sql"
-
-	"go.mau.fi/whatsmeow"
 )
 
 type ScheduledMessage struct {
