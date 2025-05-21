@@ -212,22 +212,31 @@ func main() {
 	srv := &http.Server{Addr: ":8080"}
 
 	// GET /api/contacts?name=Alice → {"numbers":["336…","52…"]}
-	http.HandleFunc("/api/contacts", func(w http.ResponseWriter, r *http.Request) {
+	  http.HandleFunc("/api/contacts", func(w http.ResponseWriter, r *http.Request) {
+	    // allow CORS
+	    w.Header().Set("Access-Control-Allow-Origin", "*")
+	    if r.Method == http.MethodOptions {
+	      w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+	      w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	      w.WriteHeader(http.StatusNoContent)
+	      return
+	    }
 		name := r.URL.Query().Get("name")
 		jids, err := findContactJIDsByName(r.Context(), client, name)
 		if err != nil {
-			http.Error(w, "Internal error", http.StatusInternalServerError)
-			return
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		return
 		}
 		numbers := make([]string, len(jids))
 		for i, jid := range jids {
-			numbers[i] = jid.User
+		numbers[i] = jid.User
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(struct {
-			Numbers []string `json:"numbers"`
+		Numbers []string `json:"numbers"`
 		}{numbers})
 	})
+
 
 	// Endpoint /schedule
 	http.HandleFunc("/api/schedule", func(w http.ResponseWriter, r *http.Request) {

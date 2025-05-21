@@ -126,31 +126,31 @@ function showSchedulerModal(name, message) {
 
   document.getElementById("wa-cancel").onclick = () => modal.remove();
 
-// 1) Fetch all numbers for this name
-fetch(`http://localhost:8080/api/contacts?name=${encodeURIComponent(name)}`)
-  .then(r => r.json())
-  .then(({ numbers }) => {
-    const select = document.getElementById("wa-number-select");
-    select.innerHTML = "";          // clear any old options
-    if (numbers.length) {
-      // add one <option> per number
-      numbers.forEach(n => {
+  // 1) Fetch all numbers for this name
+  fetch(`//localhost:8080/api/contacts?name=${encodeURIComponent(name)}`)
+    .then(r => r.json())
+    .then(({ numbers }) => {
+      const select = document.getElementById("wa-number-select");
+      select.innerHTML = "";          // clear any old options
+      if (numbers.length) {
+        // add one <option> per number
+        numbers.forEach(n => {
+          const opt = document.createElement("option");
+          opt.value = n;
+          opt.textContent = n;
+          select.appendChild(opt);
+        });
+      } else {
+        // fallback to the “name” itself if no numbers
         const opt = document.createElement("option");
-        opt.value = n;
-        opt.textContent = n;
+        opt.value = name;
+        opt.textContent = name;
         select.appendChild(opt);
-      });
-    } else {
-      // fallback to the “name” itself if no numbers
-      const opt = document.createElement("option");
-      opt.value = name;
-      opt.textContent = name;
-      select.appendChild(opt);
-    }
-  })
-  .catch(e => {
-    console.error("Could not fetch contacts:", e);
-  });
+      }
+    })
+    .catch(e => {
+      console.error("Could not fetch contacts:", e);
+    }); 
 
   document.getElementById("wa-confirm").onclick = () => {
     const date = document.getElementById("wa-date").value;
@@ -170,7 +170,7 @@ fetch(`http://localhost:8080/api/contacts?name=${encodeURIComponent(name)}`)
       send_time: iso,
     };
 
-    fetch("http://localhost:8080/api/schedule", {
+    fetch("//localhost:8080/api/schedule", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
