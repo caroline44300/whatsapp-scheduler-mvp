@@ -6,6 +6,7 @@ import (
   "encoding/json"
   "fmt"
   "net/http"
+  "log"
   "os"
   "os/signal"
   "strings"
@@ -241,7 +242,6 @@ func main() {
 	// Endpoint /schedule
 	http.HandleFunc("/api/schedule", func(w http.ResponseWriter, r *http.Request) {
 	    w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
 		if r.Method == http.MethodOptions {
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
@@ -294,9 +294,9 @@ func main() {
 	})
 
 	// run HTTP server
-	go func() {
-	if err := srv.ListenAndServeTLS("cert.pem", "key.pem"); err != nil && err != http.ErrServerClosed {
-		log.Println("HTTPS error:", err)
+	go func() {	
+   	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+       log.Println("HTTP error:", err)
 	}
 	}()
 	fmt.Println("Listening on :8080")
