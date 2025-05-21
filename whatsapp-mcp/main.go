@@ -62,31 +62,31 @@ func NewMessageStore() (*MessageStore, error) {
 	}
 
 	// Create tables if they don't exist
-	_, err = db.Exec(`
-		CREATE TABLE IF NOT EXISTS chats (
-			jid TEXT PRIMARY KEY,
-			name TEXT,
-			last_message_time TIMESTAMP
-		);
+	// _, err = db.Exec(`
+	// 	CREATE TABLE IF NOT EXISTS chats (
+	// 		jid TEXT PRIMARY KEY,
+	// 		name TEXT,
+	// 		last_message_time TIMESTAMP
+	// 	);
 		
-		CREATE TABLE IF NOT EXISTS messages (
-			id TEXT,
-			chat_jid TEXT,
-			sender TEXT,
-			content TEXT,
-			timestamp TIMESTAMP,
-			is_from_me BOOLEAN,
-			media_type TEXT,
-			filename TEXT,
-			url TEXT,
-			media_key BLOB,
-			file_sha256 BLOB,
-			file_enc_sha256 BLOB,
-			file_length INTEGER,
-			PRIMARY KEY (id, chat_jid),
-			FOREIGN KEY (chat_jid) REFERENCES chats(jid)
-		);
-	`)
+	// 	CREATE TABLE IF NOT EXISTS messages (
+	// 		id TEXT,
+	// 		chat_jid TEXT,
+	// 		sender TEXT,
+	// 		content TEXT,
+	// 		timestamp TIMESTAMP,
+	// 		is_from_me BOOLEAN,
+	// 		media_type TEXT,
+	// 		filename TEXT,
+	// 		url TEXT,
+	// 		media_key BLOB,
+	// 		file_sha256 BLOB,
+	// 		file_enc_sha256 BLOB,
+	// 		file_length INTEGER,
+	// 		PRIMARY KEY (id, chat_jid),
+	// 		FOREIGN KEY (chat_jid) REFERENCES chats(jid)
+	// 	);
+	// `)
 	if err != nil {
 		db.Close()
 		return nil, fmt.Errorf("failed to create tables: %v", err)
@@ -100,14 +100,14 @@ func (store *MessageStore) Close() error {
 	return store.db.Close()
 }
 
-// Store a chat in the database
-func (store *MessageStore) StoreChat(jid, name string, lastMessageTime time.Time) error {
-	_, err := store.db.Exec(
-		"INSERT OR REPLACE INTO chats (jid, name, last_message_time) VALUES (?, ?, ?)",
-		jid, name, lastMessageTime,
-	)
-	return err
-}
+// // Store a chat in the database
+// func (store *MessageStore) StoreChat(jid, name string, lastMessageTime time.Time) error {
+// 	_, err := store.db.Exec(
+// 		"INSERT OR REPLACE INTO chats (jid, name, last_message_time) VALUES (?, ?, ?)",
+// 		jid, name, lastMessageTime,
+// 	)
+// 	return err
+// }
 
 // Store a message in the database
 func (store *MessageStore) StoreMessage(id, chatJID, sender, content string, timestamp time.Time, isFromMe bool,
@@ -434,11 +434,11 @@ func handleMessage(client *whatsmeow.Client, messageStore *MessageStore, msg *ev
 	// Get appropriate chat name (pass nil for conversation since we don't have one for regular messages)
 	name := GetChatName(client, messageStore, msg.Info.Chat, chatJID, nil, sender, logger)
 
-	// Update chat in database with the message timestamp (keeps last message time updated)
-	err := messageStore.StoreChat(chatJID, name, msg.Info.Timestamp)
-	if err != nil {
-		logger.Warnf("Failed to store chat: %v", err)
-	}
+	// // Update chat in database with the message timestamp (keeps last message time updated)
+	// err := messageStore.StoreChat(chatJID, name, msg.Info.Timestamp)
+	// if err != nil {
+	// 	logger.Warnf("Failed to store chat: %v", err)
+	// }
 
 	// Extract text content
 	content := extractTextContent(msg.Message)
@@ -451,40 +451,40 @@ func handleMessage(client *whatsmeow.Client, messageStore *MessageStore, msg *ev
 		return
 	}
 
-	// Store message in database
-	err = messageStore.StoreMessage(
-		msg.Info.ID,
-		chatJID,
-		sender,
-		content,
-		msg.Info.Timestamp,
-		msg.Info.IsFromMe,
-		mediaType,
-		filename,
-		url,
-		mediaKey,
-		fileSHA256,
-		fileEncSHA256,
-		fileLength,
-	)
+	// // Store message in database
+	// err = messageStore.StoreMessage(
+	// 	msg.Info.ID,
+	// 	chatJID,
+	// 	sender,
+	// 	content,
+	// 	msg.Info.Timestamp,
+	// 	msg.Info.IsFromMe,
+	// 	mediaType,
+	// 	filename,
+	// 	url,
+	// 	mediaKey,
+	// 	fileSHA256,
+	// 	fileEncSHA256,
+	// 	fileLength,
+	// )
 
-	if err != nil {
-		logger.Warnf("Failed to store message: %v", err)
-	} else {
-		// Log message reception
-		timestamp := msg.Info.Timestamp.Format("2006-01-02 15:04:05")
-		direction := "←"
-		if msg.Info.IsFromMe {
-			direction = "→"
-		}
+	// if err != nil {
+	// 	logger.Warnf("Failed to store message: %v", err)
+	// } else {
+	// 	// Log message reception
+	// 	timestamp := msg.Info.Timestamp.Format("2006-01-02 15:04:05")
+	// 	direction := "←"
+	// 	if msg.Info.IsFromMe {
+	// 		direction = "→"
+	// 	}
 
-		// Log based on message type
-		if mediaType != "" {
-			fmt.Printf("[%s] %s %s: [%s: %s] %s\n", timestamp, direction, sender, mediaType, filename, content)
-		} else if content != "" {
-			fmt.Printf("[%s] %s %s: %s\n", timestamp, direction, sender, content)
-		}
-	}
+	// 	// Log based on message type
+	// 	if mediaType != "" {
+	// 		fmt.Printf("[%s] %s %s: [%s: %s] %s\n", timestamp, direction, sender, mediaType, filename, content)
+	// 	} else if content != "" {
+	// 		fmt.Printf("[%s] %s %s: %s\n", timestamp, direction, sender, content)
+	// 	}
+	// }
 }
 
 // DownloadMediaRequest represents the request body for the download media API
@@ -1117,7 +1117,7 @@ func handleHistorySync(client *whatsmeow.Client, messageStore *MessageStore, his
 				continue
 			}
 
-			messageStore.StoreChat(chatJID, name, timestamp)
+			// messageStore.StoreChat(chatJID, name, timestamp)
 
 			// Store messages
 			for _, msg := range messages {
@@ -1184,21 +1184,21 @@ func handleHistorySync(client *whatsmeow.Client, messageStore *MessageStore, his
 					continue
 				}
 
-				err = messageStore.StoreMessage(
-					msgID,
-					chatJID,
-					sender,
-					content,
-					timestamp,
-					isFromMe,
-					mediaType,
-					filename,
-					url,
-					mediaKey,
-					fileSHA256,
-					fileEncSHA256,
-					fileLength,
-				)
+				// err = messageStore.StoreMessage(
+				// 	msgID,
+				// 	chatJID,
+				// 	sender,
+				// 	content,
+				// 	timestamp,
+				// 	isFromMe,
+				// 	mediaType,
+				// 	filename,
+				// 	url,
+				// 	mediaKey,
+				// 	fileSHA256,
+				// 	fileEncSHA256,
+				// 	fileLength,
+				// )
 				if err != nil {
 					logger.Warnf("Failed to store history message: %v", err)
 				} else {
