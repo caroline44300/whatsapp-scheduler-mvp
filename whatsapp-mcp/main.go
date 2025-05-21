@@ -214,13 +214,13 @@ func main() {
 	// GET /api/contacts?name=Alice → {"numbers":["336…","52…"]}
 	  http.HandleFunc("/api/contacts", func(w http.ResponseWriter, r *http.Request) {
 	    // allow CORS
-	    w.Header().Set("Access-Control-Allow-Origin", "*")
-	    if r.Method == http.MethodOptions {
-	      w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
-	      w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	      w.WriteHeader(http.StatusNoContent)
-	      return
-	    }
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		if r.Method == http.MethodOptions {
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.WriteHeader(http.StatusNoContent)
+		return
+		}
 		name := r.URL.Query().Get("name")
 		jids, err := findContactJIDsByName(r.Context(), client, name)
 		if err != nil {
@@ -241,12 +241,13 @@ func main() {
 	// Endpoint /schedule
 	http.HandleFunc("/api/schedule", func(w http.ResponseWriter, r *http.Request) {
 	    w.Header().Set("Access-Control-Allow-Origin", "*")
-	    if r.Method == http.MethodOptions {
-	        w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
-	        w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	        w.WriteHeader(http.StatusNoContent)
-	        return
-	    }
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		if r.Method == http.MethodOptions {
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.WriteHeader(http.StatusNoContent)
+		return
+		}
 	    if r.Method != http.MethodPost {
 	        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	        return
@@ -294,9 +295,9 @@ func main() {
 
 	// run HTTP server
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			fmt.Println("HTTP error:", err)
-		}
+	if err := srv.ListenAndServeTLS("cert.pem", "key.pem"); err != nil && err != http.ErrServerClosed {
+		log.Println("HTTPS error:", err)
+	}
 	}()
 	fmt.Println("Listening on :8080")
 

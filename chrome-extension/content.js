@@ -127,7 +127,7 @@ function showSchedulerModal(name, message) {
   document.getElementById("wa-cancel").onclick = () => modal.remove();
 
   // 1) Fetch all numbers for this name
-  fetch(`//localhost:8080/api/contacts?name=${encodeURIComponent(name)}`)
+  fetch(`http://localhost:8080/api/contacts?name=${encodeURIComponent(name)}`)
     .then(r => r.json())
     .then(({ numbers }) => {
       const select = document.getElementById("wa-number-select");
@@ -170,7 +170,7 @@ function showSchedulerModal(name, message) {
       send_time: iso,
     };
 
-    fetch("//localhost:8080/api/schedule", {
+    fetch("http://localhost:8080/api/schedule", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
