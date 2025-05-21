@@ -153,6 +153,18 @@ func findContactJIDByName(ctx context.Context, client *whatsmeow.Client, name st
     return types.JID{}, false
 }
 
+// findContactJIDsByName looks up a full‐name and returns all its Contact JID.
+func findContactJIDsByName(ctx context.Context, client *whatsmeow.Client, name string) []types.JID {
+    cs, _ := client.Store.Contacts.GetAllContacts(ctx)
+    var out []types.JID
+    for _, c := range cs {
+        if strings.EqualFold(strings.TrimSpace(c.FullName), strings.TrimSpace(name)) {
+            out = append(out, c.JID)
+        }
+    }
+    return out
+}
+
 func main() {
 	// setup SQLite
 	db, err := sql.Open("sqlite3", "store.db?_foreign_keys=on")
