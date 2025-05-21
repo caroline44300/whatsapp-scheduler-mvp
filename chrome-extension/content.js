@@ -218,7 +218,7 @@ function showSchedulerModal(name, message) {
     .then(r => r.json())
     .then(({ success }) => {
       if (success) {
-        alert(`✅ Scheduled for ${name} (+${selectedNumber}) on ${new Date(iso).toLocaleString()}`);
+        alert(`✅ +${message} scheduled for ${name} (+${selectedNumber}) on ${new Date(iso).toLocaleString()}`);
         // **cleanup**
         document.getElementById("wa-date").value = "";
         document.getElementById("wa-time").value = "";
