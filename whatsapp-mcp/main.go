@@ -133,9 +133,10 @@ func schedulerLoop(client *whatsmeow.Client, db *sql.DB) {
 
 // HTTP payload for scheduling
 type ScheduleRequest struct {
-	Name     string `json:"name"`
-	Message  string `json:"message"`
-	SendTime string `json:"send_time"` // RFC3339
+  Number   string `json:"number,omitempty"`  // user‐picked
+  Name     string `json:"name,omitempty"`    // for lookup fallback
+  Message  string `json:"message"`
+  SendTime string `json:"send_time"`
 }
 
 // findContactJIDByName looks up a full‐name and returns its Contact JID.
@@ -198,6 +199,22 @@ func main() {
 	// HTTP server
 	srv := &http.Server{Addr: ":8080"}
 
+	// GET /api/contacts?name=Alice → {"numbers":["336…","52…"]}
+	http.HandleFunc("/api/contacts", func(w http.ResponseWriter, r *http.Request) {
+		name := r.URL.Query().Get("name")
+		if name == "" {
+			http.Error(w, "name required", http.StatusBadRequest)
+			return
+		}
+		// findContactJIDsByName returns []types.JID
+		jids := findContactJIDsByName(r.Context(), client, name)
+		nums := make([]string, len(jids))
+		for i, jid := range jids {
+			nums[i] = jid.User
+		}
+		json.NewEncoder(w).Encode(map[string][]string{"numbers": nums})
+	})
+
 	http.HandleFunc("/api/schedule", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		if r.Method == http.MethodOptions {
@@ -223,15 +240,21 @@ func main() {
 			return
 		}
 
-		// 2) lookup the JID from the human‐readable name
-		jid, found := findContactJIDByName(r.Context(), client, req.Name)
-		if !found {
-			http.Error(w, "Contact not found", http.StatusNotFound)
-			return
+		// 2) decide which number to schedule
+		var toNumber string
+		if req.Number != "" {
+			toNumber = req.Number
+		} else {
+			jid, found := findContactJIDByName(r.Context(), client, req.Name)
+			if !found {
+				http.Error(w, "Contact not found", http.StatusNotFound)
+				return
+			}
+			toNumber = jid.User
 		}
 
 		// 3) schedule using jid.User (the phone number portion)
-		if err := insertMessage(db, jid.User, req.Message, when); err != nil {
+		if err := insertMessage(db, toNumber, req.Message, when); err != nil {
 			http.Error(w, "DB error", http.StatusInternalServerError)
 			return
 		}

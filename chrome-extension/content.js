@@ -62,7 +62,6 @@ function injectDropdown(sendButton, attempt = 0) {
     <button id="wa-scheduler-toggle">🕒</button>
     <div id="wa-scheduler-menu" hidden>
       <div class="wa-scheduler-option" data-time="now">Send now</div>
-      <div class="wa-scheduler-option" data-time="tomorrow">Tomorrow 9am</div>
       <div class="wa-scheduler-option" data-time="custom">Custom time</div>
     </div>
   `;
@@ -89,29 +88,6 @@ function injectDropdown(sendButton, attempt = 0) {
 
       if (type === "now") {
         sendButton.click();
-        messageBox.innerText = "";
-      } else if (type === "tomorrow") {
-        const t = new Date();
-        t.setDate(t.getDate() + 1);
-        t.setHours(9, 0, 0, 0);
-
-        // ** NEW: POST to scheduler **
-        fetch("http://localhost:8080/api/schedule", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name:      name,
-            message:   message,
-            send_time: t.toISOString()
-          })
-        })
-        .then(r => r.json())
-        .then(({ success }) => {
-          if (success) alert(`✅ Scheduled for ${t.toLocaleString()}`);
-          else         alert(`❌ Scheduling failed`);
-        })
-        .catch(e => alert("Error: "+e));
-
         messageBox.innerText = "";
       } else {
         showSchedulerModal(name, message);
@@ -146,6 +122,23 @@ function showSchedulerModal(name, message) {
 
   document.getElementById("wa-cancel").onclick = () => modal.remove();
 
+  // 1) Fetch all numbers for this name
+  fetch(`http://localhost:8080/api/contacts?name=${encodeURIComponent(name)}`)
+    .then(r => r.json())
+    .then(({ numbers }) => {
+      if (numbers.length > 1) {
+        const sel = document.createElement("select")
+        sel.id = "wa-number-select"
+        numbers.forEach(n => {
+          const opt = document.createElement("option")
+          opt.value = n
+          opt.textContent = n
+          sel.appendChild(opt)
+        })
+        document.querySelector(".wa-modal-inputs").prepend(sel)
+      }
+    })
+
   document.getElementById("wa-confirm").onclick = () => {
     const date = document.getElementById("wa-date").value;
     const time = document.getElementById("wa-time").value;
@@ -157,7 +150,6 @@ function showSchedulerModal(name, message) {
     const iso = new Date(`${date}T${time}`).toISOString();
     const payload = { name, message, send_time: iso };
 
-    // ** NEW: POST to scheduler **
     fetch("http://localhost:8080/api/schedule", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -166,16 +158,18 @@ function showSchedulerModal(name, message) {
     .then(r => r.json())
     .then(({ success }) => {
       if (success) {
-        const local = new Date(iso).toLocaleString();
-        alert(`✅ Scheduled for ${local}`);
+        alert(`✅ Scheduled for ${new Date(iso).toLocaleString()}`);
+        // **cleanup**
+        document.getElementById("wa-date").value = "";
+        document.getElementById("wa-time").value = "";
+        document.getElementById("wa-scheduler-menu").hidden = true;
+        messageBox.innerText = "";
+        modal.remove();
       } else {
         alert("❌ Scheduling failed");
       }
     })
-    .catch(e => alert("Error: "+e));
-
-    modal.remove();
-    document.querySelector('[contenteditable="true"][data-tab="10"]').innerText = "";
+    .catch(e => alert("❌ "+e));
   };
 }
 
