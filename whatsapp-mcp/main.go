@@ -11,7 +11,9 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"strings"
 
+    "google.golang.org/protobuf/proto"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mdp/qrterminal"
 	"go.mau.fi/whatsmeow"
@@ -19,7 +21,6 @@ import (
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	"go.mau.fi/whatsmeow/types"
 	waLog "go.mau.fi/whatsmeow/util/log"
-	"google.golang.org/protobuf/proto"
 )
 
 // ScheduledMessage represents a message to send later
@@ -131,8 +132,8 @@ func findContactJIDByName(ctx context.Context, client *whatsmeow.Client, name st
 	}
 	for _, c := range contacts {
 		if strings.EqualFold(strings.TrimSpace(c.FullName), strings.TrimSpace(name)) {
-			return c.JID, true
-		}
++           return c.Jid, true
+        }
 	}
 	return types.JID{}, false
 }
@@ -182,6 +183,7 @@ func main() {
 
 	// HTTP server
 	srv := &http.Server{Addr: ":8080"}
+
 	http.HandleFunc("/api/schedule", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
