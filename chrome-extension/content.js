@@ -25,7 +25,22 @@ function setupMessageObserver(input, sendButton) {
   observer.observe(input, { childList: true, subtree: true, characterData: true });
 }
 
-function injectDropdown(sendButton) {
+function injectDropdown(sendButton, attempt = 0) {
+  const MAX_RETRIES = 5;
+  const RETRY_DELAY = 500; // ms
+
+  if (!sendButton || !sendButton.parentNode) {
+    if (attempt < MAX_RETRIES) {
+      setTimeout(() => injectDropdown(sendButton, attempt + 1), RETRY_DELAY);
+    } else {
+      console.warn("Failed to inject dropdown after max retries.");
+    }
+    return;
+  }
+
+  const existing = document.querySelector("#wa-scheduler-dropdown");
+  if (existing) return;
+
   const dropdown = document.createElement("div");
   dropdown.id = "wa-scheduler-dropdown";
   dropdown.innerHTML = `
@@ -36,13 +51,21 @@ function injectDropdown(sendButton) {
       <div class="wa-scheduler-option" data-time="custom">Custom time</div>
     </div>
   `;
-  sendButton.parentNode.insertBefore(dropdown, sendButton.nextSibling);
 
+  try {
+    sendButton.parentNode.insertBefore(dropdown, sendButton.nextSibling);
+  } catch (err) {
+    console.error("Failed to inject dropdown:", err);
+    return;
+  }
+
+  // Toggle menu
   document.getElementById("wa-scheduler-toggle").onclick = () => {
     const menu = document.getElementById("wa-scheduler-menu");
     menu.hidden = !menu.hidden;
   };
 
+  // Handle options
   document.querySelectorAll(".wa-scheduler-option").forEach(option => {
     option.onclick = () => {
       const type = option.getAttribute("data-time");
@@ -75,6 +98,7 @@ function injectDropdown(sendButton) {
     };
   });
 }
+
 
 function showSchedulerModal(name, message) {
   if (document.getElementById("wa-scheduler-modal")) return;
