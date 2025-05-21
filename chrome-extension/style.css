@@ -129,6 +129,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: white;
 }
 
 /* hide the little dropdown arrow when disabled */
