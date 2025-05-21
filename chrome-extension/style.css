@@ -14,8 +14,9 @@
 
 #wa-scheduler-menu {
   position: absolute;
-  top: 30px;
+  bottom: 100%; /* ⬅️ Key change: position the menu above the toggle button */
   right: 0;
+  margin-bottom: 6px; /* Optional: spacing between button and popup */
   background-color: white;
   border: 1px solid #ccc;
   border-radius: 6px;
