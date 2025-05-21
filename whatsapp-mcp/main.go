@@ -125,16 +125,16 @@ type ScheduleRequest struct {
 
 // findContactJIDByName looks up a full‐name and returns its Contact JID.
 func findContactJIDByName(ctx context.Context, client *whatsmeow.Client, name string) (types.JID, bool) {
-  contacts, err := client.Store.Contacts.GetAllContacts(ctx)
-  if err != nil {
-    return types.JID{}, false
-  }
-  for _, c := range contacts {
-    if strings.EqualFold(strings.TrimSpace(c.FullName), strings.TrimSpace(name)) {
-      return c.ID, true
+    contactsMap, err := client.Store.Contacts.GetAllContacts(ctx)
+    if err != nil {
+        return types.JID{}, false
     }
-  }
-  return types.JID{}, false
+    for jid, info := range contactsMap {
+        if strings.EqualFold(strings.TrimSpace(info.FullName), strings.TrimSpace(name)) {
+            return jid, true
+        }
+    }
+    return types.JID{}, false
 }
 
 func main() {
