@@ -139,24 +139,23 @@ type ScheduleRequest struct {
   SendTime string `json:"send_time"`
 }
 
-// Returns every matching JID for the given full‐name.
+// findContactJIDsByName returns *all* matching JIDs for a given full-name.
 func findContactJIDsByName(ctx context.Context, client *whatsmeow.Client, name string) ([]types.JID, error) {
     contactsMap, err := client.Store.Contacts.GetAllContacts(ctx)
     if err != nil {
         return nil, err
     }
-
     needle := strings.ToLower(strings.TrimSpace(name))
     var out []types.JID
     for jid, info := range contactsMap {
         if strings.ToLower(strings.TrimSpace(info.FullName)) == needle {
-            out = append(out, jid)   // <-- use the map key
+            out = append(out, jid)
         }
     }
     return out, nil
 }
 
-// Convenience: only the first one (for /api/schedule).
+// findContactJIDByName returns the *first* matching JID (for your /api/schedule).
 func findContactJIDByName(ctx context.Context, client *whatsmeow.Client, name string) (types.JID, bool) {
     jids, err := findContactJIDsByName(ctx, client, name)
     if err != nil || len(jids) == 0 {
@@ -164,6 +163,7 @@ func findContactJIDByName(ctx context.Context, client *whatsmeow.Client, name st
     }
     return jids[0], true
 }
+
 
 func main() {
 	// setup SQLite
@@ -215,12 +215,18 @@ func main() {
 	http.HandleFunc("/api/contacts", func(w http.ResponseWriter, r *http.Request) {
 		name := r.URL.Query().Get("name")
 		jids, err := findContactJIDsByName(r.Context(), client, name)
-		…
-		nums := make([]string, len(jids))
-		for i, jid := range jids {
-			nums[i] = jid.User
+		if err != nil {
+			http.Error(w, "Internal error", http.StatusInternalServerError)
+			return
 		}
-		json.NewEncoder(w).Encode(struct{ Numbers []string `json:"numbers"`}{nums})
+		numbers := make([]string, len(jids))
+		for i, jid := range jids {
+			numbers[i] = jid.User
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(struct {
+			Numbers []string `json:"numbers"`
+		}{numbers})
 	})
 
 	// Endpoint /schedule
@@ -257,6 +263,10 @@ func main() {
 			jid, found := findContactJIDByName(r.Context(), client, req.Name)
 			if !found {
 				http.Error(w, "Contact not found", http.StatusNotFound)
+				return
+			}
+			if err := insertMessage(db, jid.User, req.Message, when); err != nil {
+				http.Error(w, "DB error", http.StatusInternalServerError)
 				return
 			}
 			toNumber = jid.User
