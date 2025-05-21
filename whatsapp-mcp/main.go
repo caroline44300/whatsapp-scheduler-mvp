@@ -1,26 +1,25 @@
 package main
 
 import (
-	"context"
-	"database/sql"
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"os"
-	"os/signal"
-	"strings"
-	"syscall"
-	"time"
-	"strings"
+  "context"
+  "database/sql"
+  "encoding/json"
+  "fmt"
+  "net/http"
+  "os"
+  "os/signal"
+  "strings"
+  "syscall"
+  "time"
 
-    "google.golang.org/protobuf/proto"
-	_ "github.com/mattn/go-sqlite3"
-	"github.com/mdp/qrterminal"
-	"go.mau.fi/whatsmeow"
-	"go.mau.fi/whatsmeow/store/sqlstore"
-	waProto "go.mau.fi/whatsmeow/binary/proto"
-	"go.mau.fi/whatsmeow/types"
-	waLog "go.mau.fi/whatsmeow/util/log"
+  _ "github.com/mattn/go-sqlite3"
+  "github.com/mdp/qrterminal"
+  "go.mau.fi/whatsmeow"
+  "go.mau.fi/whatsmeow/store/sqlstore"
+  waProto "go.mau.fi/whatsmeow/binary/proto"
+  "go.mau.fi/whatsmeow/types"
+  waLog "go.mau.fi/whatsmeow/util/log"
+  "google.golang.org/protobuf/proto"
 )
 
 // ScheduledMessage represents a message to send later
@@ -126,16 +125,16 @@ type ScheduleRequest struct {
 
 // findContactJIDByName looks up a full‐name and returns its Contact JID.
 func findContactJIDByName(ctx context.Context, client *whatsmeow.Client, name string) (types.JID, bool) {
-	contacts, err := client.Store.Contacts.GetAllContacts(ctx)
-	if err != nil {
-		return types.JID{}, false
-	}
-	for _, c := range contacts {
-		if strings.EqualFold(strings.TrimSpace(c.FullName), strings.TrimSpace(name)) {
-        	return c.Jid, true
-        }
-	}
-	return types.JID{}, false
+  contacts, err := client.Store.Contacts.GetAllContacts(ctx)
+  if err != nil {
+    return types.JID{}, false
+  }
+  for _, c := range contacts {
+    if strings.EqualFold(strings.TrimSpace(c.FullName), strings.TrimSpace(name)) {
+      return c.ID, true
+    }
+  }
+  return types.JID{}, false
 }
 
 func main() {
