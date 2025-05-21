@@ -79,18 +79,33 @@ func markSent(db *sql.DB, id int64) error {
 
 // sendWhatsApp sends a plain text message via WhatsApp
 func sendWhatsApp(client *whatsmeow.Client, to, text string) (bool, string) {
-	if !client.IsConnected() {
-		return false, "not connected"
-	}
-	jid, err := types.ParseJID(to)
-	if err != nil {
-		return false, err.Error()
-	}
-	msg := &waProto.Message{Conversation: proto.String(text)}
-	if _, err = client.SendMessage(context.Background(), jid, msg); err != nil {
-		return false, err.Error()
-	}
-	return true, "sent"
+    if !client.IsConnected() {
+        return false, "not connected"
+    }
+
+    var jid types.JID
+    var err error
+
+    if strings.Contains(to, "@") {
+        // user provided a full JID
+        jid, err = types.ParseJID(to)
+        if err != nil {
+            return false, err.Error()
+        }
+    } else {
+        // assume it's a phone number; use WhatsApp's personal-chat server
+        jid = types.JID{
+            User:   to,
+            Server: "s.whatsapp.net",
+        }
+    }
+
+    msg := &waProto.Message{Conversation: proto.String(text)}
+    _, err = client.SendMessage(context.Background(), jid, msg)
+    if err != nil {
+        return false, err.Error()
+    }
+    return true, "sent"
 }
 
 // schedulerLoop polls DB every second for due messages
