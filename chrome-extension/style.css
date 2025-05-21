@@ -57,7 +57,7 @@
   color: white;
   padding: 24px;
   border-radius: 8px;
-  width: 320px;
+  width: auto;
   z-index: 10000;
   box-shadow: 0 10px 40px rgba(0,0,0,0.3);
 }
@@ -71,6 +71,11 @@
   display: flex;
   gap: 10px;
   margin: 16px 0;
+}
+
+.wa-modal-inputs label {
+  display: block;
+  margin-bottom: 12px;
 }
 
 .wa-modal-inputs input {
@@ -105,11 +110,12 @@
   color: white;
 }
 
-.required {
+.wa-required {
   color: red;
   margin-left: 2px;
-  font-size: 0.9em;
+  font-weight: bold;
 }
+
 .wa-modal-inputs label {
   display: block;
   margin-top: 8px;
