@@ -80,7 +80,6 @@ function injectDropdown(sendButton, attempt = 0) {
   document.querySelectorAll(".wa-scheduler-option").forEach(option => {
     // inside injectDropdown() where you handle the “Tomorrow” button:
     option.onclick = () => {
-      const messageBox = document.querySelector('[contenteditable="true"][data-tab="10"]');
       const message = messageBox.innerText.trim();
       const name    = document.querySelector("header span[dir='auto']").innerText.trim();
       const type    = option.getAttribute("data-time");
@@ -101,6 +100,9 @@ function injectDropdown(sendButton, attempt = 0) {
 
 function showSchedulerModal(name, message) {
   if (document.getElementById("wa-scheduler-modal")) return;
+
+  const messageBox = document.querySelector('[contenteditable="true"][data-tab="10"]');
+
 
   const modal = document.createElement("div");
   modal.id = "wa-scheduler-modal";
