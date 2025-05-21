@@ -71,7 +71,8 @@ function injectDropdown(sendButton, attempt = 0) {
       const type = option.getAttribute("data-time");
       const messageBox = document.querySelector('[contenteditable="true"][data-tab="10"]');
       const message = messageBox?.innerText.trim();
-      const name = document.querySelector("header span[title]")?.getAttribute("title") || "Unknown";
+      const nameSpan = document.querySelector("header span[dir='auto']");
+      const name = nameSpan?.innerText?.trim() || "Unknown";
 
       if (!message) return;
 
