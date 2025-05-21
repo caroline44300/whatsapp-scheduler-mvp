@@ -132,7 +132,7 @@ func findContactJIDByName(ctx context.Context, client *whatsmeow.Client, name st
 	}
 	for _, c := range contacts {
 		if strings.EqualFold(strings.TrimSpace(c.FullName), strings.TrimSpace(name)) {
-+           return c.Jid, true
+        	return c.Jid, true
         }
 	}
 	return types.JID{}, false
