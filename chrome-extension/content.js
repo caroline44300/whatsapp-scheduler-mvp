@@ -112,19 +112,23 @@ function showSchedulerModal(name, message) {
     <div class="wa-modal-content">
       <h2>Schedule message</h2>
       <div class="wa-modal-inputs">
-        <!-- 1) Select first -->
-        <label for="wa-number-select">Contact number</label>
-        <select id="wa-number-select">
-          <option value="" disabled selected>Select contact phone number</option>
-        </select>
-
-        <!-- 2) Date with red * -->
-        <label for="wa-date">Date <span class="required">*</span></label>
-        <input type="text" id="wa-date" placeholder="Pick a date" />
-
-        <!-- 3) Time with red * -->
-        <label for="wa-time">Time <span class="required">*</span></label>
-        <input type="text" id="wa-time" placeholder="Pick a time" />
+        <label>
+          Contact number
+          <span class="wa-required">*</span><br/>
+          <select id="wa-number-select">
+            <option value="" disabled selected>Select contact phone number</option>
+          </select>
+        </label>
+        <label>
+          Date
+          <span class="wa-required">*</span><br/>
+          <input type="text" id="wa-date" placeholder="Pick a date" readonly />
+        </label>
+        <label>
+          Time
+          <span class="wa-required">*</span><br/>
+          <input type="text" id="wa-time" placeholder="Pick a time" readonly />
+        </label>
       </div>
       <div class="wa-modal-actions">
         <button id="wa-cancel">Cancel</button>
