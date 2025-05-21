@@ -38,20 +38,23 @@ function setupMessageObserver(input, sendButton) {
 
 
 function injectDropdown(sendButton, attempt = 0) {
-  const MAX_RETRIES = 5;
+  const MAX_RETRIES = 10;
   const RETRY_DELAY = 500;
 
   if (!sendButton || !sendButton.parentNode) {
     if (attempt < MAX_RETRIES) {
-      setTimeout(() => injectDropdown(sendButton, attempt + 1), RETRY_DELAY);
+      console.warn(`Retrying injectDropdown (${attempt + 1})...`);
+      setTimeout(() => {
+        const refreshedButton = document.querySelector('span[data-icon="send"]')?.closest('button');
+        injectDropdown(refreshedButton, attempt + 1);
+      }, RETRY_DELAY);
     } else {
-      console.warn("Failed to inject dropdown after max retries.");
+      console.error("Failed to inject dropdown after max retries.");
     }
     return;
   }
 
-  const existing = document.querySelector("#wa-scheduler-dropdown");
-  if (existing) return;
+  if (document.querySelector("#wa-scheduler-dropdown")) return;
 
   const dropdown = document.createElement("div");
   dropdown.id = "wa-scheduler-dropdown";
@@ -67,8 +70,7 @@ function injectDropdown(sendButton, attempt = 0) {
   try {
     sendButton.parentNode.insertBefore(dropdown, sendButton.nextSibling);
   } catch (err) {
-    console.error("Failed to inject dropdown:", err);
-    return;
+    console.error("Dropdown injection failed:", err);
   }
 
   document.getElementById("wa-scheduler-toggle").onclick = () => {
@@ -78,39 +80,24 @@ function injectDropdown(sendButton, attempt = 0) {
 
   document.querySelectorAll(".wa-scheduler-option").forEach(option => {
     option.onclick = () => {
-      const type = option.getAttribute("data-time");
       const messageBox = document.querySelector('[contenteditable="true"][data-tab="10"]');
       const message = messageBox?.innerText.trim();
-      const nameSpan = document.querySelector("header span[dir='auto']");
-      const name = nameSpan?.innerText?.trim() || "Unknown";
+      const name = document.querySelector("header span[dir='auto']")?.innerText?.trim() || "Unknown";
+      const type = option.getAttribute("data-time");
 
       if (!message) return;
 
       if (type === "now") {
-        document.querySelector('span[data-icon="send"]').closest('button').click();
+        sendButton.click();
         messageBox.innerText = "";
       } else if (type === "tomorrow") {
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        tomorrow.setHours(9, 0, 0, 0);
-        const payload = {
-          name,
-          message,
-          send_time: tomorrow.toISOString()
-        };
-        const localTime = tomorrow.toLocaleString(undefined, {
-          weekday: 'short',
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true,
-        });
-        console.log("Scheduled Message:", payload);
-        alert(`Message to ${name} scheduled for: ${localTime}`);
+        const t = new Date();
+        t.setDate(t.getDate() + 1);
+        t.setHours(9, 0, 0, 0);
+        console.log({ name, message, send_time: t.toISOString() });
+        alert(`Scheduled to ${name} for: ${t.toLocaleString()}`);
         messageBox.innerText = "";
-      } else if (type === "custom") {
+      } else {
         showSchedulerModal(name, message);
       }
 
@@ -118,6 +105,7 @@ function injectDropdown(sendButton, attempt = 0) {
     };
   });
 }
+
 
 function showSchedulerModal(name, message) {
   if (document.getElementById("wa-scheduler-modal")) return;
