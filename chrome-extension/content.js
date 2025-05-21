@@ -27,7 +27,7 @@ function setupMessageObserver(input, sendButton) {
 
 function injectDropdown(sendButton, attempt = 0) {
   const MAX_RETRIES = 5;
-  const RETRY_DELAY = 500; // ms
+  const RETRY_DELAY = 500;
 
   if (!sendButton || !sendButton.parentNode) {
     if (attempt < MAX_RETRIES) {
@@ -59,13 +59,11 @@ function injectDropdown(sendButton, attempt = 0) {
     return;
   }
 
-  // Toggle menu
   document.getElementById("wa-scheduler-toggle").onclick = () => {
     const menu = document.getElementById("wa-scheduler-menu");
     menu.hidden = !menu.hidden;
   };
 
-  // Handle options
   document.querySelectorAll(".wa-scheduler-option").forEach(option => {
     option.onclick = () => {
       const type = option.getAttribute("data-time");
@@ -88,8 +86,17 @@ function injectDropdown(sendButton, attempt = 0) {
           message,
           send_time: tomorrow.toISOString()
         };
+        const localTime = tomorrow.toLocaleString(undefined, {
+          weekday: 'short',
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        });
         console.log("Scheduled Message:", payload);
-        alert(`Message to ${name} scheduled for: ${payload.send_time}`);
+        alert(`Message to ${name} scheduled for: ${localTime}`);
         messageBox.innerText = "";
       } else if (type === "custom") {
         showSchedulerModal(name, message);
@@ -99,7 +106,6 @@ function injectDropdown(sendButton, attempt = 0) {
     };
   });
 }
-
 
 function showSchedulerModal(name, message) {
   if (document.getElementById("wa-scheduler-modal")) return;
@@ -130,13 +136,22 @@ function showSchedulerModal(name, message) {
 
     if (date && time) {
       const iso = new Date(`${date}T${time}`).toISOString();
+      const localTime = new Date(iso).toLocaleString(undefined, {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
       const payload = {
         name,
         message,
         send_time: iso
       };
       console.log("Scheduled Message:", payload);
-      alert(`Message to ${name} scheduled for: ${iso}`);
+      alert(`Message to ${name} scheduled for: ${localTime}`);
       modal.remove();
 
       const messageBox = document.querySelector('[contenteditable="true"][data-tab="10"]');
