@@ -95,13 +95,6 @@ func NewMessageStore() (*MessageStore, error) {
 	return &MessageStore{db: db}, nil
 }
 
-// Initialize scheduler table
-err = scheduler.InitSchedulerTable(messageStore.db)
-if err != nil {
-	logger.Errorf("Failed to initialize scheduler DB: %v", err)
-	return
-}
-
 // Close the database connection
 func (store *MessageStore) Close() error {
 	return store.db.Close()
@@ -900,11 +893,13 @@ func main() {
 	}
 	defer messageStore.Close()
 
+	// Initialize scheduler table
 	err = scheduler.InitSchedulerTable(messageStore.db)
 	if err != nil {
 		logger.Errorf("Failed to initialize scheduler DB: %v", err)
 		return
 	}
+}
 
 	// Setup event handling for messages and history sync
 	client.AddEventHandler(func(evt interface{}) {
