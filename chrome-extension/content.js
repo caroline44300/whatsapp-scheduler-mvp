@@ -112,9 +112,19 @@ function showSchedulerModal(name, message) {
     <div class="wa-modal-content">
       <h2>Schedule message</h2>
       <div class="wa-modal-inputs">
-        <select id="wa-number-select"></select>
-        <input type="date" id="wa-date" />
-        <input type="time" id="wa-time" />
+        <!-- 1) Select first -->
+        <label for="wa-number-select">Contact number</label>
+        <select id="wa-number-select">
+          <option value="" disabled selected>Select contact phone number</option>
+        </select>
+
+        <!-- 2) Date with red * -->
+        <label for="wa-date">Date <span class="required">*</span></label>
+        <input type="text" id="wa-date" placeholder="Pick a date" />
+
+        <!-- 3) Time with red * -->
+        <label for="wa-time">Time <span class="required">*</span></label>
+        <input type="text" id="wa-time" placeholder="Pick a time" />
       </div>
       <div class="wa-modal-actions">
         <button id="wa-cancel">Cancel</button>
@@ -123,6 +133,17 @@ function showSchedulerModal(name, message) {
     </div>
   `;
   document.body.appendChild(modal);
+  flatpickr("#wa-date", {
+  dateFormat: "Y-m-d",
+  defaultDate: new Date()
+  });
+
+  flatpickr("#wa-time", {
+    enableTime: true,
+    noCalendar: true,
+    dateFormat: "H:i",
+    time_24hr: true
+  });
 
   document.getElementById("wa-cancel").onclick = () => modal.remove();
 
@@ -178,7 +199,7 @@ function showSchedulerModal(name, message) {
     .then(r => r.json())
     .then(({ success }) => {
       if (success) {
-        alert(`✅ Scheduled for ${name} (${selectedNumber}) on ${new Date(iso).toLocaleString()}`);
+        alert(`✅ Scheduled for ${name} (+${selectedNumber}) on ${new Date(iso).toLocaleString()}`);
         // **cleanup**
         document.getElementById("wa-date").value = "";
         document.getElementById("wa-time").value = "";

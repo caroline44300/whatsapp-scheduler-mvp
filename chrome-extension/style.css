@@ -105,3 +105,13 @@
   color: white;
 }
 
+.required {
+  color: red;
+  margin-left: 2px;
+  font-size: 0.9em;
+}
+.wa-modal-inputs label {
+  display: block;
+  margin-top: 8px;
+  font-weight: 500;
+}
