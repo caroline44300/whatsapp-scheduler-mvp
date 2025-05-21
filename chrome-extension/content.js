@@ -40,6 +40,7 @@ function setupMessageObserver(input, sendButton) {
 function injectDropdown(sendButton, attempt = 0) {
   const MAX_RETRIES = 10;
   const RETRY_DELAY = 500;
+  const messageBox = document.querySelector('[contenteditable="true"][data-tab="10"]');
 
   if (!sendButton || !sendButton.parentNode) {
     if (attempt < MAX_RETRIES) {
