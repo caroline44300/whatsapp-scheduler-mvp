@@ -899,7 +899,6 @@ func main() {
 		logger.Errorf("Failed to initialize scheduler DB: %v", err)
 		return
 	}
-}
 
 	// Setup event handling for messages and history sync
 	client.AddEventHandler(func(evt interface{}) {
