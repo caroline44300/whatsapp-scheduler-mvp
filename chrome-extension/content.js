@@ -1,11 +1,28 @@
 function waitForSendButton() {
   const interval = setInterval(() => {
     const sendButton = document.querySelector('span[data-icon="send"]')?.closest('button');
-    if (sendButton && !document.querySelector("#wa-scheduler-dropdown")) {
+    const messageInput = document.querySelector('[contenteditable="true"][data-tab="10"]');
+
+    if (sendButton && messageInput) {
+      setupMessageObserver(messageInput, sendButton);
       clearInterval(interval);
-      injectDropdown(sendButton);
     }
   }, 1000);
+}
+
+function setupMessageObserver(input, sendButton) {
+  const observer = new MutationObserver(() => {
+    const hasText = input.innerText.trim().length > 0;
+    const existing = document.querySelector("#wa-scheduler-dropdown");
+
+    if (hasText && !existing) {
+      injectDropdown(sendButton);
+    } else if (!hasText && existing) {
+      existing.remove();
+    }
+  });
+
+  observer.observe(input, { childList: true, subtree: true, characterData: true });
 }
 
 function injectDropdown(sendButton) {
@@ -21,37 +38,46 @@ function injectDropdown(sendButton) {
   `;
   sendButton.parentNode.insertBefore(dropdown, sendButton.nextSibling);
 
-  // Toggle dropdown
   document.getElementById("wa-scheduler-toggle").onclick = () => {
     const menu = document.getElementById("wa-scheduler-menu");
     menu.hidden = !menu.hidden;
   };
 
-  // Handle options
   document.querySelectorAll(".wa-scheduler-option").forEach(option => {
     option.onclick = () => {
-        const time = option.getAttribute("data-time");
-        const messageBox = document.querySelector('[contenteditable="true"][data-tab="10"]');
-        const message = messageBox?.innerText;
-        if (!message) return;
+      const type = option.getAttribute("data-time");
+      const messageBox = document.querySelector('[contenteditable="true"][data-tab="10"]');
+      const message = messageBox?.innerText.trim();
+      const name = document.querySelector("header span[title]")?.getAttribute("title") || "Unknown";
 
-        if (time === "now") {
-            document.querySelector('span[data-icon="send"]').closest('button').click();
-        } else if (time === "custom") {
-            showSchedulerModal(message);
-        } else {
-            alert(`Message scheduled for: ${time}`);
-        }
+      if (!message) return;
 
-        document.getElementById("wa-scheduler-menu").hidden = true;
+      if (type === "now") {
+        document.querySelector('span[data-icon="send"]').closest('button').click();
+        messageBox.innerText = "";
+      } else if (type === "tomorrow") {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(9, 0, 0, 0);
+        const payload = {
+          name,
+          message,
+          send_time: tomorrow.toISOString()
+        };
+        console.log("Scheduled Message:", payload);
+        alert(`Message to ${name} scheduled for: ${payload.send_time}`);
+        messageBox.innerText = "";
+      } else if (type === "custom") {
+        showSchedulerModal(name, message);
+      }
+
+      document.getElementById("wa-scheduler-menu").hidden = true;
     };
   });
 }
 
-waitForSendButton();
-
-function showSchedulerModal(message) {
-  if (document.getElementById("wa-scheduler-modal")) return; // prevent duplicates
+function showSchedulerModal(name, message) {
+  if (document.getElementById("wa-scheduler-modal")) return;
 
   const modal = document.createElement("div");
   modal.id = "wa-scheduler-modal";
@@ -59,7 +85,6 @@ function showSchedulerModal(message) {
     <div class="wa-modal-backdrop"></div>
     <div class="wa-modal-content">
       <h2>Schedule message</h2>
-      <p style="margin-top: -10px; color: #888;">Guadalajara, Mexico City, Monterrey</p>
       <div class="wa-modal-inputs">
         <input type="date" id="wa-date" />
         <input type="time" id="wa-time" />
@@ -73,16 +98,29 @@ function showSchedulerModal(message) {
   document.body.appendChild(modal);
 
   document.getElementById("wa-cancel").onclick = () => modal.remove();
+
   document.getElementById("wa-confirm").onclick = () => {
     const date = document.getElementById("wa-date").value;
     const time = document.getElementById("wa-time").value;
+
     if (date && time) {
-      alert(`Scheduled: ${message} at ${date} ${time}`);
+      const iso = new Date(`${date}T${time}`).toISOString();
+      const payload = {
+        name,
+        message,
+        send_time: iso
+      };
+      console.log("Scheduled Message:", payload);
+      alert(`Message to ${name} scheduled for: ${iso}`);
       modal.remove();
-      // send to your backend/n8n here
+
+      const messageBox = document.querySelector('[contenteditable="true"][data-tab="10"]');
+      if (messageBox) messageBox.innerText = "";
     } else {
-      alert("Please select date and time.");
+      alert("Please select both a date and a time.");
     }
   };
 }
 
+// Kick off
+waitForSendButton();
