@@ -231,55 +231,56 @@ func main() {
 
 	// Endpoint /schedule
 	http.HandleFunc("/api/schedule", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		if r.Method == http.MethodOptions {
-			w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-		if r.Method != http.MethodPost {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-		var req ScheduleRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, "Bad request", http.StatusBadRequest)
-			return
-		}
-
-		// 1) parse the time
-		when, err := time.Parse(time.RFC3339, req.SendTime)
-		if err != nil {
-			http.Error(w, "Invalid time format", http.StatusBadRequest)
-			return
-		}
-
-		// 2) decide which number to schedule
-		var toNumber string
-		if req.Number != "" {
-			toNumber = req.Number
-		} else {
-			jid, found := findContactJIDByName(r.Context(), client, req.Name)
-			if !found {
-				http.Error(w, "Contact not found", http.StatusNotFound)
-				return
-			}
-			if err := insertMessage(db, jid.User, req.Message, when); err != nil {
-				http.Error(w, "DB error", http.StatusInternalServerError)
-				return
-			}
-			toNumber = jid.User
-		}
-
-		// 3) schedule using jid.User (the phone number portion)
-		if err := insertMessage(db, toNumber, req.Message, when); err != nil {
-			http.Error(w, "DB error", http.StatusInternalServerError)
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"success":true}`))
+	    w.Header().Set("Access-Control-Allow-Origin", "*")
+	    if r.Method == http.MethodOptions {
+	        w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	        w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	        w.WriteHeader(http.StatusNoContent)
+	        return
+	    }
+	    if r.Method != http.MethodPost {
+	        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	        return
+	    }
+	
+	     // decode payload
+	    var req ScheduleRequest
+	    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	        http.Error(w, "Bad request", http.StatusBadRequest)
+	        return
+	    }
+	
+	     // parse the requested send time
+	    when, err := time.Parse(time.RFC3339, req.SendTime)
+	    if err != nil {
+	        http.Error(w, "Invalid time format", http.StatusBadRequest)
+	        return
+	    }
+	
+	     // decide which number to schedule
+	    var toNumber string
+	    if req.Number != "" {
+	        // use user‐picked number
+	        toNumber = req.Number
+	    } else {
+	        // fallback: lookup first JID by name
+	        jid, found := findContactJIDByName(r.Context(), client, req.Name)
+	        if !found {
+	            http.Error(w, "Contact not found", http.StatusNotFound)
+	            return
+	        }
+	        toNumber = jid.User
+	    }
+	
+	     // insert exactly once
+	    if err := insertMessage(db, toNumber, req.Message, when); err != nil {
+	        http.Error(w, "DB error", http.StatusInternalServerError)
+	        return
+	    }
+	
+	     w.Header().Set("Content-Type", "application/json")
+	    w.WriteHeader(http.StatusOK)
+	    w.Write([]byte(`{"success":true}`))
 	})
 
 	// run HTTP server

@@ -112,6 +112,7 @@ function showSchedulerModal(name, message) {
     <div class="wa-modal-content">
       <h2>Schedule message</h2>
       <div class="wa-modal-inputs">
+        <select id="wa-number-select"></select>
         <input type="date" id="wa-date" />
         <input type="time" id="wa-time" />
       </div>
@@ -125,22 +126,31 @@ function showSchedulerModal(name, message) {
 
   document.getElementById("wa-cancel").onclick = () => modal.remove();
 
-  // 1) Fetch all numbers for this name
-  fetch(`http://localhost:8080/api/contacts?name=${encodeURIComponent(name)}`)
-    .then(r => r.json())
-    .then(({ numbers }) => {
-      if (numbers.length > 1) {
-        const sel = document.createElement("select")
-        sel.id = "wa-number-select"
-        numbers.forEach(n => {
-          const opt = document.createElement("option")
-          opt.value = n
-          opt.textContent = n
-          sel.appendChild(opt)
-        })
-        document.querySelector(".wa-modal-inputs").prepend(sel)
-      }
-    })
+// 1) Fetch all numbers for this name
+fetch(`http://localhost:8080/api/contacts?name=${encodeURIComponent(name)}`)
+  .then(r => r.json())
+  .then(({ numbers }) => {
+    const select = document.getElementById("wa-number-select");
+    select.innerHTML = "";          // clear any old options
+    if (numbers.length) {
+      // add one <option> per number
+      numbers.forEach(n => {
+        const opt = document.createElement("option");
+        opt.value = n;
+        opt.textContent = n;
+        select.appendChild(opt);
+      });
+    } else {
+      // fallback to the “name” itself if no numbers
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
+      select.appendChild(opt);
+    }
+  })
+  .catch(e => {
+    console.error("Could not fetch contacts:", e);
+  });
 
   document.getElementById("wa-confirm").onclick = () => {
     const date = document.getElementById("wa-date").value;
@@ -150,8 +160,15 @@ function showSchedulerModal(name, message) {
       return;
     }
 
+    // 2) grab which phone they picked
+    const selectedNumber = document.getElementById("wa-number-select").value;
     const iso = new Date(`${date}T${time}`).toISOString();
-    const payload = { name, message, send_time: iso };
+    const payload = {
+      name:      name,
+      number:    selectedNumber,
+      message:   message,
+      send_time: iso,
+    };
 
     fetch("http://localhost:8080/api/schedule", {
       method: "POST",
@@ -161,7 +178,7 @@ function showSchedulerModal(name, message) {
     .then(r => r.json())
     .then(({ success }) => {
       if (success) {
-        alert(`✅ Scheduled for ${new Date(iso).toLocaleString()}`);
+        alert(`✅ Scheduled for ${name} (${selectedNumber}) on ${new Date(iso).toLocaleString()}`);
         // **cleanup**
         document.getElementById("wa-date").value = "";
         document.getElementById("wa-time").value = "";
