@@ -139,30 +139,30 @@ type ScheduleRequest struct {
   SendTime string `json:"send_time"`
 }
 
-// findContactJIDByName looks up a full‐name and returns its Contact JID.
-func findContactJIDByName(ctx context.Context, client *whatsmeow.Client, name string) (types.JID, bool) {
+// Returns every matching JID for the given full‐name.
+func findContactJIDsByName(ctx context.Context, client *whatsmeow.Client, name string) ([]types.JID, error) {
     contactsMap, err := client.Store.Contacts.GetAllContacts(ctx)
     if err != nil {
-        return types.JID{}, false
+        return nil, err
     }
+
+    needle := strings.ToLower(strings.TrimSpace(name))
+    var out []types.JID
     for jid, info := range contactsMap {
-        if strings.EqualFold(strings.TrimSpace(info.FullName), strings.TrimSpace(name)) {
-            return jid, true
+        if strings.ToLower(strings.TrimSpace(info.FullName)) == needle {
+            out = append(out, jid)   // <-- use the map key
         }
     }
-    return types.JID{}, false
+    return out, nil
 }
 
-// findContactJIDsByName looks up a full‐name and returns all its Contact JID.
-func findContactJIDsByName(ctx context.Context, client *whatsmeow.Client, name string) []types.JID {
-    cs, _ := client.Store.Contacts.GetAllContacts(ctx)
-    var out []types.JID
-    for _, c := range cs {
-        if strings.EqualFold(strings.TrimSpace(c.FullName), strings.TrimSpace(name)) {
-            out = append(out, c.JID)
-        }
+// Convenience: only the first one (for /api/schedule).
+func findContactJIDByName(ctx context.Context, client *whatsmeow.Client, name string) (types.JID, bool) {
+    jids, err := findContactJIDsByName(ctx, client, name)
+    if err != nil || len(jids) == 0 {
+        return types.JID{}, false
     }
-    return out
+    return jids[0], true
 }
 
 func main() {
@@ -214,19 +214,16 @@ func main() {
 	// GET /api/contacts?name=Alice → {"numbers":["336…","52…"]}
 	http.HandleFunc("/api/contacts", func(w http.ResponseWriter, r *http.Request) {
 		name := r.URL.Query().Get("name")
-		if name == "" {
-			http.Error(w, "name required", http.StatusBadRequest)
-			return
-		}
-		// findContactJIDsByName returns []types.JID
-		jids := findContactJIDsByName(r.Context(), client, name)
+		jids, err := findContactJIDsByName(r.Context(), client, name)
+		…
 		nums := make([]string, len(jids))
 		for i, jid := range jids {
 			nums[i] = jid.User
 		}
-		json.NewEncoder(w).Encode(map[string][]string{"numbers": nums})
+		json.NewEncoder(w).Encode(struct{ Numbers []string `json:"numbers"`}{nums})
 	})
 
+	// Endpoint /schedule
 	http.HandleFunc("/api/schedule", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		if r.Method == http.MethodOptions {
