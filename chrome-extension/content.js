@@ -1,20 +1,24 @@
 function waitForSendButton() {
-  let lastObservedInput = null;
-
   setInterval(() => {
     const sendButton = document.querySelector('span[data-icon="send"]')?.closest('button');
     const messageInput = document.querySelector('[contenteditable="true"][data-tab="10"]');
 
-    // Avoid reattaching if already observing this input
-    if (sendButton && messageInput && messageInput !== lastObservedInput) {
-      lastObservedInput = messageInput;
+    if (sendButton && messageInput) {
       setupMessageObserver(messageInput, sendButton);
     }
   }, 1000);
 }
 
+
+let activeObserver = null;
+
 function setupMessageObserver(input, sendButton) {
-  const observer = new MutationObserver(() => {
+  // Disconnect previous observer if any
+  if (activeObserver) {
+    activeObserver.disconnect();
+  }
+
+  activeObserver = new MutationObserver(() => {
     const hasText = input.innerText.trim().length > 0;
     const existing = document.querySelector("#wa-scheduler-dropdown");
 
@@ -25,8 +29,13 @@ function setupMessageObserver(input, sendButton) {
     }
   });
 
-  observer.observe(input, { childList: true, subtree: true, characterData: true });
+  activeObserver.observe(input, {
+    childList: true,
+    subtree: true,
+    characterData: true
+  });
 }
+
 
 function injectDropdown(sendButton, attempt = 0) {
   const MAX_RETRIES = 5;
