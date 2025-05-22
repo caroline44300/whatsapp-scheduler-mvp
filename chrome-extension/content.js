@@ -37,24 +37,8 @@ function setupMessageObserver(input, sendButton) {
 }
 
 
-function injectDropdown(sendButton, attempt = 0) {
-  const MAX_RETRIES = 10;
-  const RETRY_DELAY = 500;
+function injectDropdown(sendButton) {
   const messageBox = document.querySelector('[contenteditable="true"][data-tab="10"]');
-
-   // Ensure we have a valid button and it's in the DOM
-  if (!sendButton || !document.contains(sendButton)) {
-    if (attempt < MAX_RETRIES) {
-      console.warn(`Retrying injectDropdown (${attempt + 1})...`);
-      setTimeout(() => {
-        const refreshedButton = document.querySelector('span[data-icon="send"]')?.closest('button');
-        injectDropdown(refreshedButton, attempt + 1);
-      }, RETRY_DELAY);
-    } else {
-      console.error("Failed to inject dropdown after max retries.");
-    }
-    return;
-  }
 
   // Choose a stable container element to insert into
   const container = sendButton.parentElement || sendButton.closest('footer') || sendButton.parentNode;
