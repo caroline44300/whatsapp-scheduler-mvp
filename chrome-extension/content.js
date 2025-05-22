@@ -218,18 +218,23 @@ function showSchedulerModal(name, message) {
     .then(r => r.json())
     .then(({ success }) => {
       if (success) {
-        alert(`✅ +${message} scheduled for ${name} (+${selectedNumber}) on ${new Date(iso).toLocaleString()}`);
-        // **cleanup**
+        const reallyDismiss = !window.confirm(
+          `✅ "${message}" scheduled for ${name} (${selectedNumber})\non ${new Date(iso).toLocaleString()}\n\nPress OK to dismiss, or Cancel to keep this dialog open.`
+        );
+        if (reallyDismiss) {
+          return; // user hit “Cancel” – leave modal open
+        }
+        // user hit “OK” – cleanup & close
         document.getElementById("wa-date").value = "";
         document.getElementById("wa-time").value = "";
         document.getElementById("wa-scheduler-menu").hidden = true;
         messageBox.innerText = "";
         modal.remove();
       } else {
-        alert("❌ Scheduling failed");
+        window.alert("❌ Scheduling failed");
       }
     })
-    .catch(e => alert("❌ "+e));
+    .catch(e => window.alert("❌ " + e));
   };
 }
 
