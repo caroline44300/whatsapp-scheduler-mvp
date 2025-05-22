@@ -232,7 +232,7 @@ function showSchedulerModal(name, message) {
         const liveMessageSpan = document.querySelector('span.selectable-text.copyable-text.false');
         if (liveMessageSpan) {
           const editor = liveMessageSpan.closest('div[contenteditable="true"]');
-          if (editor) editor.innerHTML = '';
+          if (editor) editor.innerHTML = '<p><br></p>';
         }
         // now tear down the modal
         modal.remove();
