@@ -42,7 +42,8 @@ function injectDropdown(sendButton, attempt = 0) {
   const RETRY_DELAY = 500;
   const messageBox = document.querySelector('[contenteditable="true"][data-tab="10"]');
 
-  if (!sendButton || !sendButton.parentNode) {
+   // Ensure we have a valid button and it's in the DOM
+  if (!sendButton || !document.contains(sendButton)) {
     if (attempt < MAX_RETRIES) {
       console.warn(`Retrying injectDropdown (${attempt + 1})...`);
       setTimeout(() => {
@@ -55,7 +56,15 @@ function injectDropdown(sendButton, attempt = 0) {
     return;
   }
 
-  if (document.querySelector("#wa-scheduler-dropdown")) return;
+  // Choose a stable container element to insert into
+  const container = sendButton.parentElement || sendButton.closest('footer') || sendButton.parentNode;
+  if (!container) {
+    console.error("No container found to inject dropdown.");
+    return;
+  }
+
+  // Avoid duplicate injection
+  if (container.querySelector("#wa-scheduler-dropdown")) return;
 
   const dropdown = document.createElement("div");
   dropdown.id = "wa-scheduler-dropdown";
@@ -219,7 +228,7 @@ function showSchedulerModal(name, message) {
     .then(({ success }) => {
       if (success) {
         const reallyDismiss = !window.confirm(
-          `✅ "${message}" scheduled for ${name} (${selectedNumber})\non ${new Date(iso).toLocaleString()}\n\nPress OK to dismiss, or Cancel to keep this dialog open.`
+          `✅ "${message}" scheduled for ${name} (+${selectedNumber})\non ${new Date(iso).toLocaleString()}\n\nPress OK to dismiss, or Cancel to keep this dialog open.`
         );
         if (reallyDismiss) {
           return; // user hit “Cancel” – leave modal open
@@ -232,7 +241,7 @@ function showSchedulerModal(name, message) {
         const liveMessageSpan = document.querySelector('span.selectable-text.copyable-text.false');
         if (liveMessageSpan) {
           const editor = liveMessageSpan.closest('div[contenteditable="true"]');
-          if (editor) editor.innerHTML = '<p><br></p>';
+          if (editor) editor.innerHTML = '';
         }
         // now tear down the modal
         modal.remove();
