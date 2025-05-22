@@ -229,8 +229,8 @@ function showSchedulerModal(name, message) {
         document.getElementById("wa-time").value = "";
         document.getElementById("wa-scheduler-menu").hidden = true;
         // re-grab and clear the actual WhatsApp input
-        const liveMessageBox = document.querySelector('[contenteditable="true"][data-tab="10"]');
-        if (liveMessageBox) liveMessageBox.innerText = "";
+        const liveMessageBox = document.querySelector('div[role="textbox"][contenteditable="true"]');
+        if (liveMessageBox) liveMessageBox.innerHTML = "";
         // now tear down the modal
         modal.remove();
       } else {
